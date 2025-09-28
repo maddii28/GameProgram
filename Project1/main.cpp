@@ -1,7 +1,3 @@
-#include "CS3113/cs3113.h"
-#include <math.h>
-#include <vector>
-
 /**
 * Author: Maddhav Suneja
 * Assignment: Simple 2D Scene
@@ -12,34 +8,58 @@
 * Academic Misconduct.
 **/
 
-enum Member { MURDOC, TWO_D, RUSSEL, NOODLE };
+#include "CS3113/cs3113.h"
+#include <math.h>
+#include <vector>
 
 // Global Constants
-constexpr int   SCREEN_WIDTH  = 1600 / 2,
+constexpr int   RADIUS          = 110.0f,
+                MOON_RADIUSX     = 175.0f,        
+                MOON_RADIUSY     = 125.f,
+                SCREEN_WIDTH  = 1600 / 2,
                 SCREEN_HEIGHT = 900 / 2,
                 FPS           = 60,
-                SIZE          = 200,
-                FRAME_LIMIT   = 100;
-constexpr float MAX_AMP       = 10.0f;
-Member gMember = MURDOC;
+                SPEED         = 6,
+                SHRINK_RATE   = 100;
+constexpr float MAX_AMP       = 5.0f,
+                ORBIT_SPEED     = 1.0f,
+                MOON_ORBIT_SPEED = 2.0f,
+                ROTATION_SPEED = 45.0f;
 
-constexpr char    BG_COLOUR[] = "#000000";
-constexpr Vector2 ORIGIN      = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-constexpr Vector2 BASE_SIZE   = { (float) SIZE, (float) SIZE };
+constexpr Vector2 ORIGIN         = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 },
+                  MOON_BASE_SIZE = { 100.0f, 100.0f },
+                  EARTH_BASE_SIZE   = { 190.0f, 190.0f },
+                  ROCKET_BASE_SIZE = { 40.0f, 40.0f },
+                  MOON_INIT_POS  = { ORIGIN.x, ORIGIN.y - 130.0f },
+                  EARTH_INIT_POS    = { ORIGIN.x + 125.0f, ORIGIN.y + 80.0f },
+                  ROCKET_INIT_POS = { ORIGIN.x, ORIGIN.y};
 
-// Image owned by Gorillaz @see https://gorillaz.com/
-constexpr char ALBUM_COVER_FP[] = "Exercise2/assets/demon_days.png";
+constexpr char EARTH_FP[] = "/Users/sabrina/Downloads/GameProgram/Project1/assets/Earth.png"; 
+constexpr char MOON_FP[] = "/Users/sabrina/Downloads/GameProgram/Project1/assets/Moon.png";
+constexpr char ROCKET_FP[] = "/Users/sabrina/Downloads/GameProgram/Project1/assets/Rocket.png";
 
 // Global Variables
-AppStatus gAppStatus     = RUNNING;
-float     gScaleFactor   = SIZE,
-          gAngle         = 0.0f,
+AppStatus gAppStatus    = RUNNING;
+float     gAngle         = 0.0f,
+          gMoonAngle     = 0.0f,
+          gRocketAngle   = 0.0f,
+          gRotationAngle = 0.0f,
+          gPreviousTicks = 0.0f,
           gPulseTime     = 0.0f;
-Vector2   gPosition      = ORIGIN;
-Vector2   gScale         = BASE_SIZE;
-float     gPreviousTicks = 0.0f;
+Color BGColor = ColorFromHex("#000000ff");
 
-Texture2D gTexture;
+Vector2 gPosition = EARTH_INIT_POS,
+        gScale    = EARTH_BASE_SIZE,
+
+        gMoonPosition = MOON_INIT_POS,
+        gMoonScale    = MOON_BASE_SIZE,
+
+        gRocketPosition = ROCKET_INIT_POS,
+        gRocketScale = ROCKET_BASE_SIZE;
+
+Texture2D gEarthTexture;
+Texture2D gMoonTexture;
+Texture2D gRocketTexture;
 
 // Function Declarations
 void initialise();
@@ -48,12 +68,50 @@ void update();
 void render();
 void shutdown();
 
+// Hey Professor Cruz, Thx for this function - it was really handy for render
+void renderObject(const Texture2D *texture, const Vector2 *position, 
+                  const Vector2 *scale, float gAngle = 0.0f)
+{
+    // Whole texture (UV coordinates)
+    Rectangle textureArea = {
+        // top-left corner
+        0.0f, 0.0f,
+
+        // bottom-right corner (of texture)
+        static_cast<float>(texture->width),
+        static_cast<float>(texture->height)
+    };
+
+    // Destination rectangle – centred on gPosition
+    Rectangle destinationArea = {
+        position->x,
+        position->y,
+        static_cast<float>(scale->x),
+        static_cast<float>(scale->y)
+    };
+
+    // Origin inside the source texture (centre of the texture)
+    Vector2 originOffset = {
+        static_cast<float>(scale->x) / 2.0f,
+        static_cast<float>(scale->y) / 2.0f
+    };
+
+    // Render the texture on screen
+    DrawTexturePro(
+        *texture, 
+        textureArea, destinationArea, originOffset,
+        gAngle, WHITE
+    );
+}
+
 // Function Definitions
 void initialise()
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Textures");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Project1");
 
-    gTexture = LoadTexture(ALBUM_COVER_FP);
+    gEarthTexture = LoadTexture(EARTH_FP);
+    gMoonTexture = LoadTexture(MOON_FP);
+    gRocketTexture = LoadTexture(ROCKET_FP);
 
     SetTargetFPS(FPS);
 }
@@ -65,126 +123,62 @@ void processInput()
 
 void update() 
 {
-    /**
-     * @todo Calculate delta time
-     *
-     */
     float ticks = (float) GetTime();
     float deltaTime = ticks - gPreviousTicks;
     gPreviousTicks = ticks;
 
+    gPulseTime += 1.0f * deltaTime;
 
-    /**
-     * @todo Apply delta time to the time-dependent logic
-     */
-    gPulseTime += 1.0f;
-
+    //earth's scaling
     gScale = {
-        BASE_SIZE.x + MAX_AMP * cos(gPulseTime),
-        BASE_SIZE.y + MAX_AMP * cos(gPulseTime)
+        EARTH_BASE_SIZE.x + MAX_AMP * cos(SPEED * gPulseTime),
+        EARTH_BASE_SIZE.y + MAX_AMP * cos(SPEED * gPulseTime)
     };
 
-    /**
-     * @todo Switch member every 100 fames
-     */
-    arr = [&textureArea, &textureArea2, &textureArea3, &textureArea4]
-    while (GetTime() - gPreviousTicks == 1.67){
-        switch(gMember)
-        {
-            case MURDOC:
-                textureArea1 = *arr[0];
-                gMember = TWO_D;
-                break;
-            case TWO_D:
-                textureArea1 = *arr[1];
-                gMember = RUSSEL;
-                break;
-            case RUSSEL;
-                textureArea1 = *arr[2];
-                gMember = NOODLE;
-                break;
-            case NOODLE:
-                textureArea1 = *arr[3];
-                gMember = MURDOC;
-                break;
-        }
-}
+    //earth's circular orbit translation pattern
+    gAngle += ORBIT_SPEED * deltaTime;
+    gPosition.x  = ORIGIN.x + RADIUS * cos(gAngle);
+    gPosition.y  = ORIGIN.y + RADIUS * sin(gAngle);
+
+    //moon's elliptical orbit translation pattern
+    gMoonAngle += MOON_ORBIT_SPEED * deltaTime;
+    gMoonPosition.x = gPosition.x + MOON_RADIUSX * cos(gMoonAngle);
+    gMoonPosition.y = gPosition.y + MOON_RADIUSY * sin(gMoonAngle);
+
+    //earth's and moon rotation
+    gRotationAngle += ROTATION_SPEED * deltaTime;
+
+    //rocket movement[Infinity like motion btw earth n moon]
+    gRocketAngle += 2.0f * deltaTime;
+    gRocketPosition.x = (gPosition.x + gMoonPosition.x)/2 + 0.5*(gMoonPosition.x - gPosition.x)*cos(gRocketAngle); //using midpoint as the centre 
+    gRocketPosition.y = (gPosition.y + gMoonPosition.y)/2 + 0.5*(gMoonPosition.y - gPosition.y)*sin(gRocketAngle);
+
+
+    //half orbit - blue, full orbit - black
+    if (gAngle > 2*PI) gAngle -= 2*PI;
+    if (gAngle >= PI && gAngle <= PI + 0.3)      //Extra Credit YAYY lol
+    {
+        BGColor = ColorFromHex("#040832ff");
+    } else if (gAngle >= 2*PI - 0.3 && gAngle <= 2*PI)
+    {
+        BGColor = ColorFromHex("#000000ff");
+    }
+    
 }
 
 void render()
 {
     BeginDrawing();
-    ClearBackground(ColorFromHex(BG_COLOUR));
+    ClearBackground(BGColor);
 
-    /**
-     * @todo Design your UV coordinates (i.e. textureArea) so that only one
-     * member is being rendered onto the screen.
-     */
-    Rectangle textureArea = {
-        // top-left corner
-        0.0f, 0.0f,
+    //render the earth
+    renderObject(&gEarthTexture, &gPosition, &gScale, gRotationAngle);
 
-        // bottom-right corner (of texture)
-        static_cast<float>(gTexture.width/2),
-        static_cast<float>(gTexture.height/2)
-    };
-    Rectangle textureArea1 = {
-        // top-left corner
-        0.0f, 0.0f,
+    //render the moon
+    renderObject(&gMoonTexture, &gMoonPosition, &gMoonScale, gRotationAngle);
 
-        // bottom-right corner (of texture)
-        static_cast<float>(gTexture.width/2),
-        static_cast<float>(gTexture.height/2)
-    };
-    Rectangle textureArea2 = {
-
-        0.0f, gtexture.height/2,
-
-        static_cast<float>(gTexture.width/2),
-        static_cast<float>(gTexture.height)
-
-    };
-    Rectangle textureArea3 = {
-
-        gtexture.width/2, 0.0f,
-
-        static_cast<float>(gTexture.width),
-        static_cast<float>(gTexture.height/2)
-
-    };
-    Rectangle textureArea4 = {
-
-        gtexture.width/2,gTexture.height/2 ,
-
-        static_cast<float>(gTexture.width),
-        static_cast<float>(gTexture.height)
-
-    };
-
-
-    // Destination rectangle – centred on gPosition
-    Rectangle destinationArea = {
-        gPosition.x,
-        gPosition.y,
-        static_cast<float>(gScale.x),
-        static_cast<float>(gScale.y)
-    };
-
-    // Origin inside the source texture (centre of the texture)
-    Vector2 objectOrigin = {
-        static_cast<float>(gScale.x) / 2.0f,
-        static_cast<float>(gScale.y) / 2.0f
-    };
-
-    // Render the texture on screen
-    DrawTexturePro(
-        gTexture, 
-        textureArea, 
-        destinationArea, 
-        objectOrigin, 
-        gAngle, 
-        WHITE
-    );
+    //render the rocket 
+    renderObject(&gRocketTexture, &gRocketPosition, &gRocketScale);
 
     EndDrawing();
 }
