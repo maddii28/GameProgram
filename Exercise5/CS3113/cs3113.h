@@ -11,6 +11,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iostream>
 
 enum AppStatus   { TERMINATED, RUNNING };
 enum TextureType { SINGLE, ATLAS       };

@@ -38,6 +38,7 @@ constexpr char EARTH_FP[] = "/Users/sabrina/Downloads/GameProgram/Project1/asset
 constexpr char MOON_FP[] = "/Users/sabrina/Downloads/GameProgram/Project1/assets/Moon.png";
 constexpr char ROCKET_FP[] = "/Users/sabrina/Downloads/GameProgram/Project1/assets/Rocket.png";
 
+
 // Global Variables
 AppStatus gAppStatus    = RUNNING;
 float     gAngle         = 0.0f,
@@ -158,7 +159,7 @@ void update()
     if (gAngle > 2*PI) gAngle -= 2*PI;
     if (gAngle >= PI && gAngle <= PI + 0.3)      //Extra Credit YAYY lol
     {
-        BGColor = ColorFromHex("#040832ff");
+        BGColor = ColorFromHex("#020418ff");
     } else if (gAngle >= 2*PI - 0.3 && gAngle <= 2*PI)
     {
         BGColor = ColorFromHex("#000000ff");
