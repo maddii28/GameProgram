@@ -170,7 +170,7 @@ void updateball(Fireball* ball, float deltaTime){
         ball->movement.y = -0.5f;
 
     
-    //the fireball bouncing off the dragon logic(divided dragon into 3 parts and did diff fireball movement)
+    //the fireball bouncing off the dragon logic(divided dragon into 3 parts and did diff fireball bounce)
     if (isColliding(&gDragon2Position, &gDragon2Scale, &ball->position, &ball->scale)) {
         ball->movement.x = -1.0f; 
         if (ball->position.y < ((gDragon2Position.y + gDragon2Scale.y/2) - 2*gDragon2Scale.y/3)){
