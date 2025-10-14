@@ -57,17 +57,39 @@ Vector2 gPosition = BACKGROUND_POS,
         gDragon2Movement = {0.0f, 0.0f},
         gDragon2Scale = DRAGON_BASE_SIZE, 
 
-        gFireballPosition = FIREBALL_POS,
-        gFireballMovement = {0.0f, 0.0f},
-        gFireballScale = FIREBALL_BASE_SIZE,
-
         gWinnerPosition = BACKGROUND_POS,
         gWinnerScale = BACKGROUND_BASE_SIZE;
 
-bool ballstatus = false;
-bool oneplayermode = false;
-int oneplayerdirec = 1;
-int Winner = 0;
+struct Fireball {
+    Vector2 position;
+    Vector2 movement;
+    Vector2 scale;
+};
+
+Fireball gFireball1 = {
+    FIREBALL_POS,          
+    {0.0f, 0.0f},          
+    FIREBALL_BASE_SIZE     
+};
+
+Fireball gFireball2 = {
+    FIREBALL_POS,          
+    {0.0f, 0.0f},          
+    FIREBALL_BASE_SIZE     
+};
+
+Fireball gFireball3 = {
+    FIREBALL_POS,          
+    {0.0f, 0.0f},          
+    FIREBALL_BASE_SIZE     
+};
+
+bool gballstatus = false;
+bool goneplayermode = false;
+int goneplayerdirec = 1;
+int gWinner = 0;
+int gBallCount = 1;
+int gBallsOut = 0;
 
 Texture2D gBackgroundTexture;
 Texture2D gDragon1Texture;
@@ -131,6 +153,70 @@ void renderObject(const Texture2D *texture, const Vector2 *position,
     );
 }
 
+void updateball(Fireball* ball, float deltaTime){
+    
+    if (ball->movement.x == 0.0f && ball->movement.y == 0.0f) return;
+
+    //fireball movement
+    ball->position = {
+        ball->position.x + ((175 * SPEED)/100) * ball->movement.x * deltaTime,
+        ball->position.y + SPEED * ball->movement.y * deltaTime
+    };
+    
+    //up and down walls bounce off logic
+    if (ball->position.y - ball->scale.y/2 < 0.0f){
+        ball->movement.y = 0.5f;
+    }else if(ball->position.y + ball->scale.y/2 > SCREEN_HEIGHT)
+        ball->movement.y = -0.5f;
+
+    
+    //the fireball bouncing off the dragon logic(divided dragon into 3 parts and did diff fireball movement)
+    if (isColliding(&gDragon2Position, &gDragon2Scale, &ball->position, &ball->scale)) {
+        ball->movement.x = -1.0f; 
+        if (ball->position.y < ((gDragon2Position.y + gDragon2Scale.y/2) - 2*gDragon2Scale.y/3)){
+            ball->movement.y = -0.5f; 
+        }
+        else if (ball->position.y > ((gDragon2Position.y + gDragon2Scale.y/2) - gDragon2Scale.y/3)){
+            ball->movement.y = 0.5f;
+        }
+        else{
+            ball->movement.y = 0.0f;
+        }
+    }else if (isColliding(&gDragon1Position, &gDragon1Scale, &ball->position, &ball->scale)) {
+        ball->movement.x = 1.0f; 
+        if (ball->position.y < ((gDragon1Position.y + gDragon1Scale.y/2) - 2*gDragon1Scale.y/3)){
+            ball->movement.y = -0.5f; 
+        }
+        else if (ball->position.y > ((gDragon1Position.y + gDragon1Scale.y/2) - gDragon1Scale.y/3)){
+            ball->movement.y = 0.5f;
+        }
+        else{
+            ball->movement.y = 0.0f;
+        }
+    }  
+
+    //ball hitting the left or right side of wall logic
+    if (ball->position.x - ball->scale.x/2 > SCREEN_WIDTH || ball->position.x + ball->scale.x/2 < 0.0f){   
+
+        ball->movement = {0.0f, 0.0f};
+        
+        int pointWinner;
+        if (ball->position.x + ball->scale.x/2 > SCREEN_WIDTH)
+            pointWinner = 1; 
+        else if (ball->position.x - ball->scale.x/2 < 0.0f)
+            pointWinner = -1; 
+            
+        gBallsOut += 1;
+        
+        if (gBallsOut == gBallCount) {
+            gWinner = pointWinner; 
+            gballstatus = false;
+            goneplayermode = false;   
+            gBallsOut = 0; 
+        }
+    }
+}
+
 // Function Definitions
 void initialise()
 {
@@ -151,14 +237,47 @@ void processInput()
     gDragon1Movement = {0.0f, 0.0f};
     gDragon2Movement = {0.0f, 0.0f};
 
-    if (IsKeyPressed(KEY_A))
-        Winner = 0;
-           
+    if (gWinner == 0 && !gballstatus){
+        if (IsKeyPressed(KEY_TWO))
+            gBallCount = 2;
+        else if (IsKeyPressed(KEY_THREE))
+            gBallCount = 3;
+    }
+
+    if (IsKeyPressed(KEY_A)){
+        gWinner = 0;
+        gBallCount = 1;
+
+        gFireball1.position = FIREBALL_POS;
+        gFireball2.position = FIREBALL_POS;
+        gFireball3.position = FIREBALL_POS;
+    }
+      
     //To start the game(i.e get ball moving)
-    if (IsKeyPressed(KEY_SPACE) && (gFireballPosition.x == ORIGIN.x) && (gFireballPosition.y == ORIGIN.y) && (Winner == 0)){
-        gFireballMovement.x = 1;
-        gFireballMovement.y = 0.5;
-        ballstatus = true;
+    if (IsKeyPressed(KEY_SPACE) && !gballstatus && (gWinner == 0)){
+
+        gBallsOut = 0;
+
+        gFireball1.movement.x = 1.0;
+        gFireball1.movement.y = 0.5;
+
+        //Launch Ball 2 
+        if (gBallCount >= 2){
+            gFireball2.movement.x = 1.0;
+            gFireball2.movement.y = -0.5; 
+        }else{
+            gFireball2.movement = {0.0f, 0.0f}; 
+        }
+        
+        // Launch Ball 3 
+        if (gBallCount == 3) {
+            gFireball3.movement.x = 1.0;
+            gFireball3.movement.y = 0.0; 
+        } else {
+            gFireball3.movement = {0.0f, 0.0f};
+        }
+
+        gballstatus = true;
     }
 
     // Dragon1: Q - Up, A- Down
@@ -168,12 +287,12 @@ void processInput()
         gDragon1Movement.y = 1;   
     
     //input for the one player mode 
-    if ((IsKeyPressed(KEY_T)) && (!ballstatus)){
-        oneplayermode = true;
+    if ((IsKeyPressed(KEY_T)) && (!gballstatus)){
+        goneplayermode = true;
     }
 
     // Dragon2: P - Up, L - Down 
-    if (!oneplayermode) {
+    if (!goneplayermode) {
         if (IsKeyDown(KEY_UP) && (gDragon2Position.y - gDragon2Scale.y/2 > 0.0f)) {
             gDragon2Movement.y = -1;
         } else if (IsKeyDown(KEY_DOWN) && (gDragon2Position.y + gDragon2Scale.y/2 < SCREEN_HEIGHT)) {
@@ -200,16 +319,16 @@ void update()
     };
 
     // one player mode dragon2 movement
-    if (oneplayermode) {
-        if ((ballstatus) && (gFireballMovement.x == 1)){
-            if (gFireballPosition.y > gDragon2Position.y + gDragon2Scale.y/2)
+    if (goneplayermode) {
+        if ((gballstatus) && (gFireball1.movement.x == 1)){
+            if (gFireball1.position.y > gDragon2Position.y + gDragon2Scale.y/2)
                 gDragon2Movement.y = 1;
-            else if (gFireballPosition.y < gDragon2Position.y - gDragon2Scale.y/2)
+            else if (gFireball1.position.y < gDragon2Position.y - gDragon2Scale.y/2)
                 gDragon2Movement.y = -1;
             else 
                 gDragon2Movement.y = 0;
         } else {
-            gDragon2Movement.y = float(oneplayerdirec);
+            gDragon2Movement.y = float(goneplayerdirec);
         }
     }
 
@@ -219,63 +338,22 @@ void update()
         gDragon2Position.y + SPEED * gDragon2Movement.y * deltaTime
     };
 
+    //to keep dragon2 in screen bounds for one player logic
     if (gDragon2Position.y - gDragon2Scale.y / 2.0f <= 0.0f) 
-        oneplayerdirec = 1;
+        goneplayerdirec = 1;
     else if (gDragon2Position.y + gDragon2Scale.y / 2.0f >= SCREEN_HEIGHT) 
-        oneplayerdirec = -1;
+        goneplayerdirec = -1;
 
-    //Fireball logic for resetting game for left, right walls 
-    if (gFireballPosition.x + gFireballScale.x/2 > SCREEN_WIDTH || gFireballPosition.x - gFireballScale.x/2 < 0.0f){
-        if (gFireballPosition.x + gFireballScale.x/2 > SCREEN_WIDTH)
-            Winner = 1;
-        else
-            Winner = -1;
-        ballstatus = false;
-        oneplayermode = false;
-        gFireballPosition = {ORIGIN.x, ORIGIN.y};
+    if (gballstatus){
+        updateball(&gFireball1, deltaTime);
+
+        if (gBallCount >= 2) 
+            updateball(&gFireball2, deltaTime);
+        
+        if (gBallCount == 3) 
+            updateball(&gFireball3, deltaTime);
     }
-
-    //Fireball movement logic during active gameplay
-    if (ballstatus){
-        gFireballPosition = {
-            gFireballPosition.x + ((175 * SPEED)/100) * gFireballMovement.x * deltaTime,
-            gFireballPosition.y + SPEED * gFireballMovement.y * deltaTime
-        };
-    }else{gFireballMovement = {0.0f,0.0f};}
     
-    //Fireball logic for bouncing off the top n down wall
-    if (gFireballPosition.y - gFireballScale.y/2 < 0.0f){
-        gFireballMovement.y = 0.5f;
-    } 
-    else if (gFireballPosition.y + gFireballScale.y/2 > SCREEN_HEIGHT)
-        gFireballMovement.y = -0.5f;
-
-
-    //colliding and bouncing off logic for dragon1 and dragon2
-    if (isColliding(&gDragon2Position, &gDragon2Scale, &gFireballPosition, &gFireballScale)) {
-        gFireballMovement.x = -1; 
-        if (gFireballPosition.y < ((gDragon2Position.y + gDragon2Scale.y/2) - 2*gDragon2Scale.y/3)){
-            gFireballMovement.y = -0.5f; 
-        }
-        else if (gFireballPosition.y > ((gDragon2Position.y + gDragon2Scale.y/2) - gDragon2Scale.y/3)){
-            gFireballMovement.y = 0.5f;
-        }
-        else{
-            gFireballMovement.y = 0.0f;
-        }
-    }  
-    else if (isColliding(&gDragon1Position, &gDragon1Scale, &gFireballPosition, &gFireballScale)) {
-        gFireballMovement.x = 1; 
-        if (gFireballPosition.y < ((gDragon1Position.y + gDragon1Scale.y/2) - 2*gDragon1Scale.y/3)){
-            gFireballMovement.y = -0.5f; 
-        }
-        else if (gFireballPosition.y > ((gDragon1Position.y + gDragon1Scale.y/2) - gDragon1Scale.y/3)){
-            gFireballMovement.y = 0.5f;
-        }
-        else{
-            gFireballMovement.y = 0.0f;
-        }
-    }  
 }
 
 void render()
@@ -286,11 +364,19 @@ void render()
     renderObject(&gBackgroundTexture, &gPosition, &gScale);
     renderObject(&gDragon1Texture, &gDragon1Position, &gDragon1Scale);
     renderObject(&gDragon2Texture, &gDragon2Position, &gDragon2Scale);
-    renderObject(&gFireballTexture, &gFireballPosition, &gFireballScale);
 
-    if (Winner == 1)
+    if (gBallCount >= 1)
+        renderObject(&gFireballTexture, &gFireball1.position, &gFireball1.scale);
+    
+    if (gBallCount >= 2)
+        renderObject(&gFireballTexture, &gFireball2.position, &gFireball2.scale);
+    
+    if (gBallCount >= 3)
+        renderObject(&gFireballTexture, &gFireball3.position, &gFireball3.scale);
+
+    if (gWinner == 1)
         renderObject(&gWinner1, &gWinnerPosition, &gWinnerScale);
-    else if (Winner == -1)
+    else if (gWinner == -1)
         renderObject(&gWinner2, &gWinnerPosition, &gWinnerScale);
 
     EndDrawing();
