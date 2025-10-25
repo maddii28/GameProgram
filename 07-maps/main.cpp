@@ -111,12 +111,12 @@ void initialise()
         PLAYER                                  // entity type
     );
 
-    gState.block = new Entity(
-        {ORIGIN.x - 300.0f, ORIGIN.y - 200.0f}, 
-        {200.0f * sizeRatio, 200.0f},
+    gState.Block = new Entity(
+        {90, 220}, 
+        {80.0f, 80.0f},
         "/Users/sabrina/Downloads/GameProgram/07-maps/assets/game/tile_0061.png", 
-        
-    )
+        BLOCK 
+    );
 
     gState.xochitl->setJumpingPower(550.0f);
     gState.xochitl->setColliderDimensions({
@@ -203,6 +203,7 @@ void render()
 
     gState.xochitl->render();
     gState.map->render();
+    gState.Block ->render();
 
     EndMode2D();
 
