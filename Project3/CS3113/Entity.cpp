@@ -5,27 +5,29 @@ Entity::Entity() : mPosition {0.0f, 0.0f}, mMovement {0.0f, 0.0f},
                    mScale {DEFAULT_SIZE, DEFAULT_SIZE},
                    mColliderDimensions {DEFAULT_SIZE, DEFAULT_SIZE}, 
                    mTexture {NULL}, mTextureType {SINGLE}, mAngle {0.0f},
-                   mSpriteSheetDimensions {}, mDirection {RIGHT}, 
-                   mAnimationAtlas {{}}, mAnimationIndices {}, mFrameSpeed {0} { }
+                   mSpriteSheetDimensions {}, mDirection {OPEN}, 
+                   mAnimationAtlas {{}}, mAnimationIndices {}, mFrameSpeed {0},
+                   mEntityType {PLAYER} { }
 
-Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath) : 
-    mPosition {position}, mVelocity {0.0f, 0.0f}, mAcceleration {0.0f, 0.0f}, 
-    mScale {scale}, mMovement {0.0f, 0.0f}, mColliderDimensions {scale},
-    mTexture {LoadTexture(textureFilepath)}, mTextureType {SINGLE}, 
-    mDirection {RIGHT}, mAnimationAtlas {{}}, mAnimationIndices {}, 
-    mFrameSpeed {0}, mSpeed {DEFAULT_SPEED}, mAngle {0.0f} { }
+Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+    EntityType entityType) : mPosition {position}, mVelocity {0.0f, 0.0f}, 
+    mAcceleration {0.0f, 0.0f}, mScale {scale}, mMovement {0.0f, 0.0f}, 
+    mColliderDimensions {scale}, mTexture {LoadTexture(textureFilepath)}, 
+    mTextureType {SINGLE}, mDirection {OPEN}, mAnimationAtlas {{}}, 
+    mAnimationIndices {}, mFrameSpeed {0}, mSpeed {DEFAULT_SPEED}, 
+    mAngle {0.0f}, mEntityType {entityType} { }
 
 Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
         TextureType textureType, Vector2 spriteSheetDimensions, std::map<Direction, 
-        std::vector<int>> animationAtlas) : mPosition {position}, 
-        mVelocity {0.0f, 0.0f}, mAcceleration {0.0f, 0.0f}, 
-        mMovement { 0.0f, 0.0f }, mScale {scale}, mColliderDimensions {scale},
-        mTexture {LoadTexture(textureFilepath)}, mTextureType {ATLAS}, 
-        mSpriteSheetDimensions {spriteSheetDimensions}, 
-        mAnimationAtlas {animationAtlas}, mDirection {RIGHT}, 
-        mAnimationIndices {animationAtlas.at(RIGHT)}, 
+        std::vector<int>> animationAtlas, EntityType entityType) : 
+        mPosition {position}, mVelocity {0.0f, 0.0f}, 
+        mAcceleration {0.0f, 0.0f}, mMovement { 0.0f, 0.0f }, mScale {scale},
+        mColliderDimensions {scale}, mTexture {LoadTexture(textureFilepath)}, 
+        mTextureType {ATLAS}, mSpriteSheetDimensions {spriteSheetDimensions},
+        mAnimationAtlas {animationAtlas}, mDirection {OPEN},
+        mAnimationIndices {animationAtlas.at(OPEN)}, 
         mFrameSpeed {DEFAULT_FRAME_SPEED}, mAngle { 0.0f }, 
-        mSpeed { DEFAULT_SPEED } { }
+        mSpeed { DEFAULT_SPEED }, mEntityType {entityType} { }
 
 Entity::~Entity() { UnloadTexture(mTexture); };
 
@@ -44,44 +46,39 @@ Entity::~Entity() { UnloadTexture(mTexture); };
  * many entities are in the `collidableEntities` array that need to be checked
  * for collisions with the current entity.
  */
-void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount)
-{
-    for (int i = 0; i < collisionCheckCount; i++)
-    {
-        // STEP 1: For every entity that our player can collide with...
-        Entity *collidableEntity = &collidableEntities[i];
-        
+bool Entity::checkCollisionY(Entity *collidableEntity)
+{     
         if (isColliding(collidableEntity))
         {
             // STEP 2: Calculate the distance between its centre and our centre
             //         and use that to calculate the amount of overlap between
             //         both bodies.
             float yDistance = fabs(mPosition.y - collidableEntity->mPosition.y);
-            float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - (collidableEntity->mColliderDimensions.y / 2.0f));
+            float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
+                              (collidableEntity->mColliderDimensions.y / 2.0f));
             
             // STEP 3: "Unclip" ourselves from the other entity, and zero our
             //         vertical velocity.
             if (mVelocity.y > 0) 
             {
-                mPosition.y -= yOverlap;
+                mPosition.y -= (3*yOverlap)/4;
                 mVelocity.y  = 0;
                 mIsCollidingBottom = true;
+                return true;
+
             } else if (mVelocity.y < 0) 
             {
-                mPosition.y += yOverlap;
+                mPosition.y += (3*yOverlap)/4;
                 mVelocity.y  = 0;
                 mIsCollidingTop = true;
             }
+            return false;
         }
-    }
 }
 
-void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount)
+
+bool Entity::checkCollisionX(Entity *collidableEntity)
 {
-    for (int i = 0; i < collisionCheckCount; i++)
-    {
-        Entity *collidableEntity = &collidableEntities[i];
-        
         if (isColliding(collidableEntity))
         {            
             // When standing on a platform, we're always slightly overlapping
@@ -92,28 +89,30 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
             float yDistance = fabs(mPosition.y - collidableEntity->mPosition.y);
             float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - (collidableEntity->mColliderDimensions.y / 2.0f));
 
-            // Skip if barely touching vertically (standing on platform)
-            if (yOverlap < Y_COLLISION_THRESHOLD) continue;
 
             float xDistance = fabs(mPosition.x - collidableEntity->mPosition.x);
             float xOverlap  = fabs(xDistance - (mColliderDimensions.x / 2.0f) - (collidableEntity->mColliderDimensions.x / 2.0f));
 
             if (mVelocity.x > 0) {
-                mPosition.x     -= xOverlap;
+                mPosition.x     -= (3*xOverlap)/4;
                 mVelocity.x      = 0;
 
                 // Collision!
                 mIsCollidingRight = true;
             } else if (mVelocity.x < 0) {
-                mPosition.x    += xOverlap;
+                mPosition.x    += (3*xOverlap)/4;
                 mVelocity.x     = 0;
  
                 // Collision!
                 mIsCollidingLeft = true;
             }
+            if (xOverlap > 0){
+                return true;
+            }
+            return false;
         }
-    }
 }
+
 
 /**
  * Checks if two entities are colliding based on their positions and collider 
@@ -127,6 +126,8 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
  */
 bool Entity::isColliding(Entity *other) const 
 {
+    if (!other->isActive() || other == this) return false;
+
     float xDistance = fabs(mPosition.x - other->getPosition().x) - 
         ((mColliderDimensions.x + other->getColliderDimensions().x) / 2.0f);
     float yDistance = fabs(mPosition.y - other->getPosition().y) - 
@@ -159,54 +160,53 @@ void Entity::animate(float deltaTime)
     }
 }
 
-void Entity::displayCollider() 
-{
-    // draw the collision box
-    Rectangle colliderBox = {
-        mPosition.x - mColliderDimensions.x / 2.0f,  
-        mPosition.y - mColliderDimensions.y / 2.0f,  
-        mColliderDimensions.x,                        
-        mColliderDimensions.y                        
-    };
 
-    DrawRectangleLines(
-        colliderBox.x,      // Top-left X
-        colliderBox.y,      // Top-left Y
-        colliderBox.width,  // Width
-        colliderBox.height, // Height
-        GREEN               // Color
-    );
-}
-
-void Entity::update(float deltaTime, Entity *collidableEntities, int collisionCheckCount)
+void Entity::update(float deltaTime,Entity *Platform,
+    Entity* Pad1,Entity* Pad2,Entity* Pad3, GameState &gamestate)
 {
-    if(mEntityStatus == INACTIVE) return;
+    if (mEntityStatus == INACTIVE) return;
 
     resetColliderFlags();
 
-    mVelocity.x = mMovement.x * mSpeed;
+    if (mEntityType == PLAYER){
 
-    mVelocity.x += mAcceleration.x * deltaTime;
-    mVelocity.y += mAcceleration.y * deltaTime;
+        const float Damping = 0.99982; 
 
-    // ––––– JUMPING ––––– //
-    if (mIsJumping)
-    {
-        // STEP 1: Immediately return the flag to its original false state
-        mIsJumping = false;
-        
-        // STEP 2: The player now acquires an upward velocity
-        mVelocity.y -= mJumpingPower;
+        mVelocity.x += mAcceleration.x * deltaTime;
+        mVelocity.y += mAcceleration.y * deltaTime;
+
+        mPosition.x += mVelocity.x * deltaTime;
+        mPosition.y += mVelocity.y * deltaTime;
+
+        mVelocity.x *= Damping;
+        mVelocity.y *= Damping;
+
+        if (checkCollisionY(Pad1) || checkCollisionY(Pad2) || checkCollisionY(Pad3)){
+            if (checkCollisionX(Pad1) || checkCollisionX(Pad2) || checkCollisionX(Pad3)){
+                gamestate = MISSION_ACCOMPLISHED;
+            }else{gamestate = MISSION_FAILED;}
+        }else if (isColliding(Platform)){
+            gamestate = MISSION_FAILED;
+        }else if (mPosition.y > std::max({Pad1->mPosition.y, Pad2->mPosition.y, Pad3->mPosition.y})) {
+            gamestate = MISSION_FAILED;
+        }else if(mPosition.x<0 || mPosition.x>1000 || mPosition.y < 0 || mPosition.y > 600){
+            gamestate = MISSION_FAILED;
+        }
+    }else if (mEntityType == PLATFORM){
+        if (mVelocity.x == 0){
+            mVelocity.x = 5.0f;
+        }
+        if (gamestate == PLAYING){
+
+            mPosition.x += mVelocity.x * deltaTime;
+
+            if (mPosition.x + mScale.x/2 > 1000) {
+                mVelocity.x = -mVelocity.x; 
+            } else if (mPosition.x - mScale.x/2 < 0) {
+                mVelocity.x = -mVelocity.x; 
+            }
+        }
     }
-
-    mPosition.y += mVelocity.y * deltaTime;
-    checkCollisionY(collidableEntities, collisionCheckCount);
-
-    mPosition.x += mVelocity.x * deltaTime;
-    checkCollisionX(collidableEntities, collisionCheckCount);
-
-    if (mTextureType == ATLAS && GetLength(mMovement) != 0 && mIsCollidingBottom) 
-        animate(deltaTime);
 }
 
 void Entity::render()
@@ -260,5 +260,5 @@ void Entity::render()
         mAngle, WHITE
     );
 
-    displayCollider();
+
 }
