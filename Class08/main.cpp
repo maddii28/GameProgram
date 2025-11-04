@@ -114,7 +114,7 @@ void initialise()
     gState.Block = new Entity(
         {90, 220}, 
         {80.0f, 80.0f},
-        "/Users/sabrina/Downloads/GameProgram/07-maps/assets/game/tile_0061.png", 
+        "/Users/sabrina/Downloads/GameProgram/Class08/assets/game/tile_0061.png", 
         BLOCK 
     );
 
