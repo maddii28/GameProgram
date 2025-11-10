@@ -3,24 +3,24 @@
 class Map
 {
 private:
-    int mMapColumns; // number of columns in map
-    int mMapRows;    // number of rows in map
+    int mMapColumns; 
+    int mMapRows;    
 
-    unsigned int *mLevelData; // array of tile indices
-    Texture2D mTextureAtlas;  // texture atlas
+    unsigned int *mLevelData; 
+    Texture2D mTextureAtlas; 
 
-    float mTileSize; // size of each tile in pixels
+    float mTileSize;
 
-    int mTextureColumns; // number of columns in texture atlas
-    int mTextureRows;    // number of rows in texture atlas
+    int mTextureColumns;
+    int mTextureRows;    
 
-    std::vector<Rectangle> mTextureAreas; // texture areas for each tile
-    Vector2 mOrigin; // center of the map in world coordinates
+    std::vector<Rectangle> mTextureAreas; 
+    Vector2 mOrigin;
 
-    float mLeftBoundary;  // left boundary of the map in world coordinates
-    float mRightBoundary; // right boundary of the map in world coordinates
-    float mTopBoundary;   // top boundary of the map in world coordinates
-    float mBottomBoundary;// bottom boundary of the map in world coordinates
+    float mLeftBoundary; 
+    float mRightBoundary; 
+    float mTopBoundary;   
+    float mBottomBoundary;
 
 public:
     Map(int mapColumns, int mapRows, unsigned int *levelData,

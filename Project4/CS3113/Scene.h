@@ -2,9 +2,9 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "Entity.h"   // includes Map.h and cs3113.h
+#include "Entity.h"   
 
-// One GameState per scene
+
 struct GameState
 {
     Entity *AxeKing   = nullptr;
@@ -17,7 +17,6 @@ struct GameState
 
     Camera2D camera{};
 
-    // 0 = stay here, >0 = index in level list to switch to
     int nextSceneID = -1;
 };
 
@@ -33,13 +32,12 @@ public:
     Scene(Vector2 origin, const char *bgHexCode);
     virtual ~Scene() = default;
 
-    // All scenes must implement these:
+    
     virtual void initialise()         = 0;
     virtual void update(float dt)     = 0;
     virtual void render()             = 0;
     virtual void shutdown()           = 0;
 
-    // Accessors – same style as prompt:
     GameState   getState()           const { return mGameState;       }
     Vector2     getOrigin()          const { return mOrigin;          }
     const char* getBGColourHexCode() const { return mBGColourHexCode; }

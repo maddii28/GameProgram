@@ -43,9 +43,9 @@ void Level3::initialise()
         { RIGHT, { 0, 1, 2, 3, 4, 5, 6 } },
     };
 
-    // We reuse mGameState.robber as the flyer enemy to avoid new GameState members
+    
     mGameState.flyer = new Entity(
-        { mOrigin.x+25  , mOrigin.y  }, // spawn up in the air
+        { mOrigin.x+25  , mOrigin.y  },
         { 100.0f * sizeRatio, 95.0f },
         "/Users/sabrina/Downloads/GameProgram/Project4/assets/flying-head.png",
         ATLAS,
@@ -54,7 +54,7 @@ void Level3::initialise()
         NPC
     );
 
-    // "Flyer" = FOLLOWER with no gravity, so it chases along X while floating
+    
     mGameState.flyer->setAIType(FOLLOWER);
     mGameState.flyer->setAIState(IDLE);
     mGameState.flyer->setColliderDimensions({
@@ -62,7 +62,7 @@ void Level3::initialise()
         mGameState.flyer->getScale().y / 3.0f
     });
 
-    // no gravity → it won't fall, just move horizontally from AIFollow
+    
     mGameState.flyer->setAcceleration({ 0.0f, 0.0f });
 
 
@@ -122,10 +122,10 @@ void Level3::update(float deltaTime)
         0
     );
 
-    // Flyer update – uses FOLLOWER AI, no gravity, so it "flies" at a fixed height
+    
     mGameState.flyer->update(
         deltaTime,
-        mGameState.AxeKing,  // FOLLOWER uses the player target
+        mGameState.AxeKing,  
         mGameState.map,
         nullptr,
         0
@@ -138,31 +138,30 @@ void Level3::update(float deltaTime)
         mGameState.nextSceneID = 0;  
     }
 
-    // If flyer touches player, also end game
-    // Touching jumper/follower enemy
+    
 if (mGameState.AxeKing->isColliding(mGameState.flyer))
 {
     gLives--;
 
     if (gLives > 0)
     {
-        mGameState.nextSceneID = 3;  // restart Level3
+        mGameState.nextSceneID = 3;  
     }
     else
     {
         gShowLose = true;
-        mGameState.nextSceneID = 0;  // back to menu
+        mGameState.nextSceneID = 0;  
     }
 }
 
-// Falling off map
+
 if (mGameState.AxeKing->getPosition().y > END_GAME_THRESHOLD)
 {
     gLives--;
 
     if (gLives > 0)
     {
-        mGameState.nextSceneID = 3;  // restart Level3
+        mGameState.nextSceneID = 3;  
     }
     else
     {

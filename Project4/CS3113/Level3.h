@@ -9,7 +9,7 @@ private:
     static constexpr int LEVEL_WIDTH  = 14;
     static constexpr int LEVEL_HEIGHT = 8;
 
-    // You can tweak this, but I'll reuse a layout similar to Level2
+    
     unsigned int mLevelData[LEVEL_WIDTH * LEVEL_HEIGHT] = {
         4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

@@ -130,19 +130,19 @@ void Level2::update(float deltaTime)
         mGameState.nextSceneID = 3;
     }
 
-    // Example: touching robber
+    
 if (mGameState.AxeKing->isColliding(mGameState.robber))
 {
     gLives--;
 
     if (gLives > 0)
     {
-        mGameState.nextSceneID = 2;  // restart Level2
+        mGameState.nextSceneID = 2;  
     }
     else
     {
         gShowLose = true;
-        mGameState.nextSceneID = 0;  // back to menu
+        mGameState.nextSceneID = 0;  
     }
 }
 

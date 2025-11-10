@@ -238,8 +238,7 @@ void Entity::AIFollow(Entity *target)
         break;
 
     case WALKING:
-        // Depending on where the player is in respect to their x-position
-        // Change direction of the enemy
+        
         if (mPosition.x > (target->getPosition().x + (target->getScale().x))) moveLeft();
         else if (mPosition.x < (target->getPosition().x - (target->getScale().x)))       moveRight();
         else mAIState = IDLE;

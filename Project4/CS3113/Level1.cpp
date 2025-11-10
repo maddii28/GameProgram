@@ -65,7 +65,7 @@ void Level1::initialise()
     mGameState.samurai->setDirection(LEFT);
     mGameState.samurai->setSpeed(7*Entity::DEFAULT_SPEED/10);
 
-    // ---- AXE KING (PLAYER) ----
+    //AXE KING (PLAYER)
     std::map<Direction, std::vector<int>> AxeKingAnimationAtlas = {
         { LEFT,  { 0, 1, 2, 3, 4, 5, 6, 7 } },
         { RIGHT, { 0, 1, 2, 3, 4, 5, 6, 7 } },
@@ -88,7 +88,7 @@ void Level1::initialise()
     });
     mGameState.AxeKing->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
 
-    // ---- BLOCK (PORTAL / TRIGGER) ----
+    // BLOCK (PORTAL / TRIGGER) 
     mGameState.Block = new Entity(
         { mOrigin.x + 238.0f, mOrigin.y - 320.0f },
         { 94.0f * sizeRatio, 70.0f },
@@ -101,7 +101,7 @@ void Level1::initialise()
         mGameState.Block->getScale().y / 3.0f
     });
 
-    // ---- CAMERA ----
+    // CAMERA 
     mGameState.camera = {};
     mGameState.camera.target   = mGameState.AxeKing->getPosition();
     mGameState.camera.offset   = mOrigin;
@@ -154,15 +154,15 @@ void Level1::update(float deltaTime)
         gLives--;
         
         if (gLives > 0){
-        mGameState.nextSceneID = 1;  // restart Level1
+        mGameState.nextSceneID = 1;  
         }else{
         gShowLose = true;
-        mGameState.nextSceneID = 0;  // back to menu
+        mGameState.nextSceneID = 0;  
         }
     }
 
 
-    // Simple camera follow
+    
     mGameState.camera.target = mGameState.AxeKing->getPosition();
 
 }

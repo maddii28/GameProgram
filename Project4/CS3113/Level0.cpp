@@ -18,12 +18,12 @@ Level0::Level0(Vector2 origin, const char *bgHexCode)
 
 void Level0::initialise()
 {
-    // No level switching yet
+    
     mGameState.nextSceneID = -1;
 
-    // Simple static camera (not following any entity)
+    
     mGameState.camera = {};
-    mGameState.camera.target   = mOrigin;  // center on origin
+    mGameState.camera.target   = mOrigin;  
     mGameState.camera.offset   = mOrigin;
     mGameState.camera.rotation = 0.0f;
     mGameState.camera.zoom     = 1.0f;
@@ -33,7 +33,7 @@ void Level0::initialise()
 
 void Level0::update(float /*deltaTime*/)
 {
-    // When ENTER is pressed, tell main loop to go to Level1 (index 1 in gScenes)
+    
     if (IsKeyPressed(KEY_ENTER))
     {
         mGameState.nextSceneID = 1;
@@ -76,5 +76,5 @@ void Level0::render()
 
 void Level0::shutdown()
 {
-    // Nothing allocated in this scene, so nothing to delete.
+    
 }
