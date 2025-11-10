@@ -2,7 +2,7 @@
 
 struct GameState
 {
-    Entity *xochitl;
+    Entity *AxeKing;
     Entity *Block;
 
     Map *map;
@@ -101,7 +101,7 @@ void initialise()
     float sizeRatio  = 48.0f / 64.0f;
 
     // Assets from @see https://sscary.itch.io/the-adventurer-female
-    gState.xochitl = new Entity(
+    gState.AxeKing = new Entity(
         {ORIGIN.x - 300.0f, ORIGIN.y - 200.0f}, // position
         {200.0f * sizeRatio, 200.0f},           // scale
         "assets/game/walk.png",                 // texture file address
@@ -118,18 +118,18 @@ void initialise()
         BLOCK 
     );
 
-    gState.xochitl->setJumpingPower(550.0f);
-    gState.xochitl->setColliderDimensions({
-        gState.xochitl->getScale().x / 3.5f,
-        gState.xochitl->getScale().y / 3.0f
+    gState.AxeKing->setJumpingPower(550.0f);
+    gState.AxeKing->setColliderDimensions({
+        gState.AxeKing->getScale().x / 3.5f,
+        gState.AxeKing->getScale().y / 3.0f
     });
-    gState.xochitl->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
+    gState.AxeKing->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
 
     /*
         ----------- CAMERA -----------
     */
     gState.camera = { 0 };                                // zero initialize
-    gState.camera.target = gState.xochitl->getPosition(); // camera follows player
+    gState.camera.target = gState.AxeKing->getPosition(); // camera follows player
     gState.camera.offset = ORIGIN;                        // camera offset to center of screen
     gState.camera.rotation = 0.0f;                        // no rotation
     gState.camera.zoom = 1.0f;                            // default zoom
@@ -139,19 +139,19 @@ void initialise()
 
 void processInput() 
 {
-    gState.xochitl->resetMovement();
+    gState.AxeKing->resetMovement();
 
-    if      (IsKeyDown(KEY_A)) gState.xochitl->moveLeft();
-    else if (IsKeyDown(KEY_D)) gState.xochitl->moveRight();
+    if      (IsKeyDown(KEY_A)) gState.AxeKing->moveLeft();
+    else if (IsKeyDown(KEY_D)) gState.AxeKing->moveRight();
 
-    if (IsKeyPressed(KEY_W) && gState.xochitl->isCollidingBottom())
+    if (IsKeyPressed(KEY_W) && gState.AxeKing->isCollidingBottom())
     {
-        gState.xochitl->jump();
+        gState.AxeKing->jump();
         PlaySound(gState.jumpSound);
     }
 
-    if (GetLength(gState.xochitl->getMovement()) > 1.0f) 
-        gState.xochitl->normaliseMovement();
+    if (GetLength(gState.AxeKing->getMovement()) > 1.0f) 
+        gState.AxeKing->normaliseMovement();
 
     if (IsKeyPressed(KEY_Q) || WindowShouldClose()) gAppStatus = TERMINATED;
 }
@@ -176,7 +176,7 @@ void update()
     {
         UpdateMusicStream(gState.bgm);
 
-        gState.xochitl->update(
+        gState.AxeKing->update(
             FIXED_TIMESTEP, // delta time / fixed timestep
             nullptr,        // player
             gState.map,     // map
@@ -186,11 +186,11 @@ void update()
 
         deltaTime -= FIXED_TIMESTEP;
 
-        Vector2 currentPlayerPosition = gState.xochitl->getPosition();
+        Vector2 currentPlayerPosition = gState.AxeKing->getPosition();
 
         panCamera(&gState.camera, &currentPlayerPosition);
 
-        if (gState.xochitl->getPosition().y > 800.0f) gAppStatus = TERMINATED;
+        if (gState.AxeKing->getPosition().y > 800.0f) gAppStatus = TERMINATED;
     }
 }
 
@@ -201,7 +201,7 @@ void render()
 
     BeginMode2D(gState.camera);
 
-    gState.xochitl->render();
+    gState.AxeKing->render();
     gState.map->render();
     gState.Block ->render();
 
@@ -212,7 +212,7 @@ void render()
 
 void shutdown() 
 {
-    delete gState.xochitl;
+    delete gState.AxeKing;
     delete gState.map;
 
     UnloadMusicStream(gState.bgm);
