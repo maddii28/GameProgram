@@ -45,7 +45,7 @@ void Level3::initialise()
 
     
     mGameState.flyer = new Entity(
-        { mOrigin.x+25  , mOrigin.y  },
+        { mOrigin.x+ 15  , mOrigin.y  },
         { 100.0f * sizeRatio, 95.0f },
         "/Users/sabrina/Downloads/GameProgram/Project4/assets/flying-head.png",
         ATLAS,
